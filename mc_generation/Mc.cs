@@ -20,7 +20,8 @@ public partial class Mc : MeshInstance3D
         Textura,
         Terreno,
         Cueva,
-        Extra1
+        Extra1,
+        Extra2
     }
 
     [Export]
@@ -86,6 +87,7 @@ public partial class Mc : MeshInstance3D
     
     public virtual float density(int x, int y, int z)
     {
+        Vector3 center = grid_res / 2;
         switch (density_function)
         {
             case density_code.Esfera:
@@ -103,7 +105,6 @@ public partial class Mc : MeshInstance3D
                 float e = d - 1 + (1 - ((1 - image[z].GetPixel(x, y).R) * 2)) * influencia;
                 return inRange(e);
             case density_code.Extra1:
-                Vector3 center = grid_res / 2;
                 Vector3 forX = new Vector3(x, center.Y, center.Z);
                 float distX = forX.DistanceTo(new Vector3(x,y,z));
                 Vector3 forY = new Vector3(center.X, y, center.Z);
@@ -112,6 +113,11 @@ public partial class Mc : MeshInstance3D
                 float distZ = forZ.DistanceTo(new Vector3(x, y, z));
                 float closest = Math.Min(distX,Math.Min(distY, distZ));
                 return inRange(1 - closest / 10  + (1 - ((1 - image[z].GetPixel(x, y).R) * 2)) * influencia);
+            case density_code.Extra2:
+                float m = altura - y + (1 - ((1 - image[z].GetPixel(x, y).R) * 2)) * influencia;
+                float dc = Math.Abs(x - center.X);
+                m += (center.X - dc) * 0.3f;
+                return inRange(m);
         }
         return 0;
     }
@@ -177,7 +183,7 @@ public partial class Mc : MeshInstance3D
     {
         rd = RenderingServer.CreateLocalRenderingDevice();
 
-        var shaderFile = GD.Load<RDShaderFile>("res://compute.glsl");
+        var shaderFile = GD.Load<RDShaderFile>("./compute.glsl");
         var shaderBytecode = shaderFile.GetSpirV();
         shader_id = rd.ShaderCreateFromSpirV(shaderBytecode);
         
